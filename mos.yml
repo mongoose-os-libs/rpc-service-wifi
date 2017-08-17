@@ -1,0 +1,13 @@
+author: mongoose-os
+description: RPC Wifi Service support
+type: lib
+version: 1.0
+skeleton_version: 2017-06-16
+sources:
+  - src
+libs:
+  - origin: https://github.com/mongoose-os-libs/rpc-common
+tags:
+  - rpc
+  - wifi
+  - c
