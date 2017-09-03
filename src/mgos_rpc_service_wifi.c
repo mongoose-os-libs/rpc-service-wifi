@@ -16,7 +16,7 @@ static int wifi_scan_result_printer(struct json_out *out, va_list *ap) {
   const struct mgos_wifi_scan_result *res =
       va_arg(*ap, const struct mgos_wifi_scan_result *);
 
-  for (int i = 0; i < num_res; i++, res++) {
+  for (int i = 0; i < num_res; i++) {
     if (i > 0) len += json_printf(out, ", ");
     len +=
         json_printf(out, "{ssid: %Q, auth: %d, channel: %d, rssi: %d}",
