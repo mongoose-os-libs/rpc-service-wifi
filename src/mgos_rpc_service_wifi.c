@@ -41,16 +41,11 @@ static void mgos_rpc_wifi_scan_handler(struct mg_rpc_request_info *ri,
                                        void *cb_arg,
                                        struct mg_rpc_frame_info *fi,
                                        struct mg_str args) {
-  if (!fi->channel_is_trusted) {
-    mg_rpc_send_errorf(ri, 403, "unauthorized");
-    ri = NULL;
-    return;
-  }
-
   mgos_wifi_scan(wifi_scan_cb, ri);
 
   (void) args;
   (void) cb_arg;
+  (void) fi;
 }
 
 bool mgos_rpc_service_wifi_init(void) {
