@@ -52,7 +52,7 @@ static void wifi_scan_cb(int n, struct mgos_wifi_scan_result *res, void *arg) {
     mg_rpc_send_errorf(ri, n, "wifi scan failed");
     return;
   }
-  mg_rpc_send_responsef(ri, "{results: [%M]}", wifi_scan_result_printer, n,
+  mg_rpc_send_responsef(ri, "[%M]", wifi_scan_result_printer, n,
                         res);
 }
 
