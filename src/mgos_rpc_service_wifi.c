@@ -30,9 +30,16 @@ static int wifi_scan_result_printer(struct json_out *out, va_list *ap) {
 
   for (int i = 0; i < num_res; i++) {
     if (i > 0) len += json_printf(out, ", ");
+
+    char bssid[18];
+    sprintf(bssid, "%02x:%02x:%02x:%02x:%02x:%02x", res[i].bssid[0],
+            res[i].bssid[1], res[i].bssid[2], res[i].bssid[3],
+            res[i].bssid[4], res[i].bssid[5]);
+
     len +=
-        json_printf(out, "{ssid: %Q, auth: %d, channel: %d, rssi: %d}",
-                    res[i].ssid, res[i].auth_mode, res[i].channel, res[i].rssi);
+        json_printf(out, "{ssid: %Q, bssid: %Q, auth: %d, channel: %d,"
+                    " rssi: %d}", res[i].ssid, bssid, res[i].auth_mode,
+                    res[i].channel, res[i].rssi);
   }
 
   return len;
