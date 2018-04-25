@@ -29,10 +29,16 @@ static int wifi_scan_result_printer(struct json_out *out, va_list *ap) {
       va_arg(*ap, const struct mgos_wifi_scan_result *);
 
   for (int i = 0; i < num_res; i++) {
+    const struct mgos_wifi_scan_result *r = &res[i];
     if (i > 0) len += json_printf(out, ", ");
-    len +=
-        json_printf(out, "{ssid: %Q, auth: %d, channel: %d, rssi: %d}",
-                    res[i].ssid, res[i].auth_mode, res[i].channel, res[i].rssi);
+
+    len += json_printf(out,
+                       "{ssid: %Q, bssid: \"%02x:%02x:%02x:%02x:%02x:%02x\", "
+                       "auth: %d, channel: %d,"
+                       " rssi: %d}",
+                       r->ssid, r->bssid[0], r->bssid[1], r->bssid[2],
+                       r->bssid[3], r->bssid[4], r->bssid[5], r->auth_mode,
+                       r->channel, r->rssi);
   }
 
   return len;
@@ -45,8 +51,7 @@ static void wifi_scan_cb(int n, struct mgos_wifi_scan_result *res, void *arg) {
     mg_rpc_send_errorf(ri, n, "wifi scan failed");
     return;
   }
-  mg_rpc_send_responsef(ri, "{results: [%M]}", wifi_scan_result_printer, n,
-                        res);
+  mg_rpc_send_responsef(ri, "[%M]", wifi_scan_result_printer, n, res);
 }
 
 static void mgos_rpc_wifi_scan_handler(struct mg_rpc_request_info *ri,
