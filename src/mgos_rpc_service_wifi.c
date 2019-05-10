@@ -65,9 +65,64 @@ static void mgos_rpc_wifi_scan_handler(struct mg_rpc_request_info *ri,
   (void) fi;
 }
 
+static void mgos_rpc_wifi_setup_sta_handler(struct mg_rpc_request_info *ri,
+                                            void *cb_arg,
+                                            struct mg_rpc_frame_info *fi,
+                                            struct mg_str args) {
+  bool enable = false;
+  struct mgos_config_wifi_sta cfg = {0};
+  json_scanf(args.p, args.len, ri->args_fmt, &enable, &cfg.ssid, &cfg.pass);
+  cfg.enable = enable;
+
+  if (mgos_wifi_setup_sta(&cfg)) {
+    mg_rpc_send_responsef(ri, NULL);
+  } else {
+    mg_rpc_send_errorf(ri, -1, "%s failed", "mgos_wifi_setup_sta");
+  }
+
+  free(cfg.ssid);
+  free(cfg.pass);
+  (void) fi;
+  (void) cb_arg;
+}
+
+static void mgos_rpc_wifi_setup_ap_handler(struct mg_rpc_request_info *ri,
+                                           void *cb_arg,
+                                           struct mg_rpc_frame_info *fi,
+                                           struct mg_str args) {
+  bool enable = false;
+  struct mgos_config_wifi_ap cfg = {
+      .ip = (char *) mgos_sys_config_get_wifi_ap_ip(),
+      .netmask = (char *) mgos_sys_config_get_wifi_ap_netmask(),
+      .dhcp_start = (char *) mgos_sys_config_get_wifi_ap_dhcp_start(),
+      .dhcp_end = (char *) mgos_sys_config_get_wifi_ap_dhcp_end(),
+      .channel = mgos_sys_config_get_wifi_ap_channel(),
+      .max_connections = mgos_sys_config_get_wifi_ap_max_connections(),
+  };
+  json_scanf(args.p, args.len, ri->args_fmt, &enable, &cfg.ssid, &cfg.pass,
+             &cfg.channel);
+  cfg.enable = enable;
+
+  if (mgos_wifi_setup_ap(&cfg)) {
+    mg_rpc_send_responsef(ri, NULL);
+  } else {
+    mg_rpc_send_errorf(ri, -1, "%s failed", "mgos_wifi_setup_ap");
+  }
+
+  free(cfg.ssid);
+  free(cfg.pass);
+  (void) fi;
+  (void) cb_arg;
+}
+
 bool mgos_rpc_service_wifi_init(void) {
   struct mg_rpc *c = mgos_rpc_get_global();
   mg_rpc_add_handler(c, "Wifi.Scan", "", mgos_rpc_wifi_scan_handler, NULL);
+  mg_rpc_add_handler(c, "Wifi.SetupSTA", "{enable: %B, ssid: %Q, pass: %Q}",
+                     mgos_rpc_wifi_setup_sta_handler, NULL);
+  mg_rpc_add_handler(c, "Wifi.SetupAP",
+                     "{enable: %B, ssid: %Q, pass: %Q, channel: %d}",
+                     mgos_rpc_wifi_setup_ap_handler, NULL);
 
   return true;
 }
