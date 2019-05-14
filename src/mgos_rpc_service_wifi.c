@@ -80,8 +80,8 @@ static void mgos_rpc_wifi_setup_sta_handler(struct mg_rpc_request_info *ri,
     mg_rpc_send_errorf(ri, -1, "%s failed", "mgos_wifi_setup_sta");
   }
 
-  free(cfg.ssid);
-  free(cfg.pass);
+  free((char *) cfg.ssid);
+  free((char *) cfg.pass);
   (void) fi;
   (void) cb_arg;
 }
@@ -109,8 +109,8 @@ static void mgos_rpc_wifi_setup_ap_handler(struct mg_rpc_request_info *ri,
     mg_rpc_send_errorf(ri, -1, "%s failed", "mgos_wifi_setup_ap");
   }
 
-  free(cfg.ssid);
-  free(cfg.pass);
+  free((char *) cfg.ssid);
+  free((char *) cfg.pass);
   (void) fi;
   (void) cb_arg;
 }
