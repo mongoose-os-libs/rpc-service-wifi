@@ -70,18 +70,23 @@ static void mgos_rpc_wifi_setup_sta_handler(struct mg_rpc_request_info *ri,
                                             struct mg_rpc_frame_info *fi,
                                             struct mg_str args) {
   bool enable = false;
-  struct mgos_config_wifi_sta cfg = {0};
-  json_scanf(args.p, args.len, ri->args_fmt, &enable, &cfg.ssid, &cfg.pass);
+  const struct mgos_config_wifi_sta *sys_cfg = mgos_sys_config_get_wifi_sta();
+  struct mgos_config_wifi_sta cfg = *sys_cfg;
+  mgos_config_copy_wifi_sta(mgos_sys_config_get_wifi_sta(), &cfg);
+  json_scanf(args.p, args.len, ri->args_fmt, &enable, &cfg.ssid, &cfg.pass,
+             &cfg.ip, &cfg.netmask, &cfg.gw);
   cfg.enable = enable;
-
   if (mgos_wifi_setup_sta(&cfg)) {
     mg_rpc_send_responsef(ri, NULL);
   } else {
     mg_rpc_send_errorf(ri, -1, "%s failed", "mgos_wifi_setup_sta");
   }
+  if (cfg.ssid != sys_cfg->ssid) free((void *) cfg.ssid);
+  if (cfg.pass != sys_cfg->pass) free((void *) cfg.pass);
+  if (cfg.ip != sys_cfg->ip) free((void *) cfg.ip);
+  if (cfg.netmask != sys_cfg->netmask) free((void *) cfg.netmask);
+  if (cfg.gw != sys_cfg->gw) free((void *) cfg.gw);
 
-  free((char *) cfg.ssid);
-  free((char *) cfg.pass);
   (void) fi;
   (void) cb_arg;
 }
@@ -91,26 +96,25 @@ static void mgos_rpc_wifi_setup_ap_handler(struct mg_rpc_request_info *ri,
                                            struct mg_rpc_frame_info *fi,
                                            struct mg_str args) {
   bool enable = false;
-  struct mgos_config_wifi_ap cfg = {
-      .ip = (char *) mgos_sys_config_get_wifi_ap_ip(),
-      .netmask = (char *) mgos_sys_config_get_wifi_ap_netmask(),
-      .dhcp_start = (char *) mgos_sys_config_get_wifi_ap_dhcp_start(),
-      .dhcp_end = (char *) mgos_sys_config_get_wifi_ap_dhcp_end(),
-      .channel = mgos_sys_config_get_wifi_ap_channel(),
-      .max_connections = mgos_sys_config_get_wifi_ap_max_connections(),
-  };
+  const struct mgos_config_wifi_ap *sys_cfg = mgos_sys_config_get_wifi_ap();
+  struct mgos_config_wifi_ap cfg = *sys_cfg;
   json_scanf(args.p, args.len, ri->args_fmt, &enable, &cfg.ssid, &cfg.pass,
-             &cfg.channel);
+             &cfg.channel, &cfg.ip, &cfg.netmask, &cfg.gw, &cfg.dhcp_start,
+             &cfg.dhcp_end);
   cfg.enable = enable;
-
   if (mgos_wifi_setup_ap(&cfg)) {
     mg_rpc_send_responsef(ri, NULL);
   } else {
     mg_rpc_send_errorf(ri, -1, "%s failed", "mgos_wifi_setup_ap");
   }
+  if (cfg.ssid != sys_cfg->ssid) free((void *) cfg.ssid);
+  if (cfg.pass != sys_cfg->pass) free((void *) cfg.pass);
+  if (cfg.ip != sys_cfg->ip) free((void *) cfg.ip);
+  if (cfg.netmask != sys_cfg->netmask) free((void *) cfg.netmask);
+  if (cfg.gw != sys_cfg->gw) free((void *) cfg.gw);
+  if (cfg.dhcp_start != sys_cfg->dhcp_start) free((void *) cfg.dhcp_start);
+  if (cfg.dhcp_end != sys_cfg->dhcp_end) free((void *) cfg.dhcp_end);
 
-  free((char *) cfg.ssid);
-  free((char *) cfg.pass);
   (void) fi;
   (void) cb_arg;
 }
@@ -118,10 +122,14 @@ static void mgos_rpc_wifi_setup_ap_handler(struct mg_rpc_request_info *ri,
 bool mgos_rpc_service_wifi_init(void) {
   struct mg_rpc *c = mgos_rpc_get_global();
   mg_rpc_add_handler(c, "Wifi.Scan", "", mgos_rpc_wifi_scan_handler, NULL);
-  mg_rpc_add_handler(c, "Wifi.SetupSTA", "{enable: %B, ssid: %Q, pass: %Q}",
+  mg_rpc_add_handler(c, "Wifi.SetupSTA",
+                     "{enable: %B, ssid: %Q, pass: %Q, "
+                     "ip: %Q, netmask: %Q, gw: %Q}",
                      mgos_rpc_wifi_setup_sta_handler, NULL);
   mg_rpc_add_handler(c, "Wifi.SetupAP",
-                     "{enable: %B, ssid: %Q, pass: %Q, channel: %d}",
+                     "{enable: %B, ssid: %Q, pass: %Q, channel: %d, "
+                     "ip: %Q, netmask: %Q, gw: %Q, "
+                     "dhcp_start: %Q, dhcp_end: %Q}",
                      mgos_rpc_wifi_setup_ap_handler, NULL);
 
   return true;
