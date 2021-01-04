@@ -72,7 +72,7 @@ static void mgos_rpc_wifi_setup_sta_handler(struct mg_rpc_request_info *ri,
   bool enable = false;
   const struct mgos_config_wifi_sta *sys_cfg = mgos_sys_config_get_wifi_sta();
   struct mgos_config_wifi_sta cfg = *sys_cfg;
-  mgos_config_copy_wifi_sta(mgos_sys_config_get_wifi_sta(), &cfg);
+  mgos_config_wifi_sta_copy(mgos_sys_config_get_wifi_sta(), &cfg);
   json_scanf(args.p, args.len, ri->args_fmt, &enable, &cfg.ssid, &cfg.pass,
              &cfg.ip, &cfg.netmask, &cfg.gw);
   cfg.enable = enable;
